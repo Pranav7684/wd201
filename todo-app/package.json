@@ -16,7 +16,7 @@
       "prettier --write ."
     ]
   },
-  "author": "Pranav Arun Nikam <nikampranav36@gmail.com>",
+  "author": "Pranav Nikam <nikampranav36@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
