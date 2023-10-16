@@ -1,3 +1,4 @@
+// app.js file /views / todo-app
 const express = require("express");
 const app = express();
 var csrf = require("tiny-csrf");
@@ -88,7 +89,6 @@ app.get("/", async (request, response) => {
     // Redirect to "/todos" if the user is logged in
     return response.redirect("/todos");
   }
-  // for non-logged-in users
   response.render("index", {
     title: "Todo Application",
     csrfToken: request.csrfToken(),
@@ -140,13 +140,10 @@ app.post("/users", async (request, response) => {
     request.flash("error", "First name cannot be empty!");
     return response.redirect("/signup");
   }
-
   if (request.body.password.length < 8) {
     request.flash("error", "Password must be at least 8 characters");
     return response.redirect("/signup");
   }
-
-  //hashing the password
   const hashedPwd = await bcrypt.hash(request.body.password, saltRounds);
   //have to create a user
   console.log(request.user);
@@ -221,7 +218,7 @@ app.post(
   connnectEnsureLogin.ensureLoggedIn(),
   async (request, response) => {
     if (request.body.title.length == 0) {
-      request.flash("error", "Todo Title cannot be empty!");
+      request.flash("error", "Title cannot be empty!");
       return response.redirect("/todos");
     }
 
@@ -249,7 +246,7 @@ app.put(
   "/todos/:id",
   connnectEnsureLogin.ensureLoggedIn(),
   async (request, response) => {
-    console.log("Updating a todo with ID:", request.params.id);
+    console.log("We have to update a todo with ID:", request.params.id);
     const todo = await Todo.findByPk(request.params.id);
     try {
       const updatedtodo = await todo.setCompletionStatus(
@@ -264,7 +261,7 @@ app.put(
 );
 
 app.put("/todos/:id/markAsCompleted", async (request, response) => {
-  console.log("Updating a todo with ID:", request.params.id);
+  console.log("We have to update a todo with ID:", request.params.id);
   const todo = await Todo.findByPk(request.params.id);
   try {
     const updatedtodo = await todo.setCompletionStatus(request.body.completed);
@@ -279,6 +276,7 @@ app.delete(
   "/todos/:id",
   connnectEnsureLogin.ensureLoggedIn(),
   async (request, response) => {
+    // console.log("Delete a todo by ID: ", request.params.id)
     const loggedInUser = request.user.id;
     console.log("We have to delete a todo with ID: ", request.params.id);
     try {
@@ -289,5 +287,5 @@ app.delete(
     }
   },
 );
-
 module.exports = app;
+
