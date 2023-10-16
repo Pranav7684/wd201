@@ -27,7 +27,7 @@ const { Todo, User } = require("./models");
 
 app.use(
   session({
-    secret: "my-super-secret-key-23487623476321414726",
+    secret: "my-super-secret-key-44548852154665441560",
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
     },
@@ -129,12 +129,6 @@ app.get("/signup", (request, response) => {
     csrfToken: request.csrfToken(),
   });
 });
-
-app.post("/users", async (request, response) => {
-  if (request.body.email.length == 0) {
-    request.flash("error", "Email can not be empty!");
-    return response.redirect("/signup");
-  }
 
   if (request.body.firstName.length == 0) {
     request.flash("error", "First name cannot be empty!");
