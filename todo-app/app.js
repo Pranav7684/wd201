@@ -130,6 +130,12 @@ app.get("/signup", (request, response) => {
   });
 });
 
+app.post("/users", async (request, response) => {
+  if (request.body.email.length == 0) {
+    request.flash("error", "Email can not be empty!");
+    return response.redirect("/signup");
+  }
+
   if (request.body.firstName.length == 0) {
     request.flash("error", "First name cannot be empty!");
     return response.redirect("/signup");
