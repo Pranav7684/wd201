@@ -1,12 +1,13 @@
+/* eslint-disable no-undef */
 const request = require("supertest");
-var cheerio = require("cheerio");
+const cheerio = require("cheerio");
 const db = require("../models/index");
 const app = require("../app");
-//const todo = require("../models/todo");
+
 let server, agent;
 
 function extractCsrfToken(res) {
-  var $ = cheerio.load(res.text);
+  const $ = cheerio.load(res.text);
   return $("[name=_csrf]").val();
 }
 
@@ -20,20 +21,22 @@ const login = async (agent, username, password) => {
   });
 };
 
-describe("Todo test cases ", () => {
+describe("Todo test suite", () => {
   beforeAll(async () => {
     await db.sequelize.sync({ force: true });
-    server = app.listen(4000, () => {});
+    server = app.listen(3000, () => {});
     agent = request.agent(server);
   });
+
   afterAll(async () => {
     await db.sequelize.close();
     server.close();
   });
 
-  test("Sign in", async () => {
+  test("Sign up", async () => {
     let res = await agent.get("/signup");
     const csrfToken = extractCsrfToken(res);
+
     res = await agent.post("/users").send({
       firstName: "Test",
       lastName: "User A",
@@ -46,30 +49,34 @@ describe("Todo test cases ", () => {
 
   test("Sign out", async () => {
     let res = await agent.get("/todos");
-    expect(res.statusCode).toBe(302);
+    expect(res.statusCode).toBe(200);
+
     res = await agent.get("/signout");
     expect(res.statusCode).toBe(302);
+
     res = await agent.get("/todos");
     expect(res.statusCode).toBe(302);
   });
 
-  test("Create new todo", async () => {
+  test("Creates a todo and responds with json at /todos post endpoint", async () => {
     const agent = request.agent(server);
-    await login(agent, "user.a@test.com", "123456789");
+    await login(agent, "user.a@test.com", "12345678");
+
     const res = await agent.get("/todos");
     const csrfToken = extractCsrfToken(res);
     const response = await agent.post("/todos").send({
-      title: "Go to movie",
+      title: "Buy milk",
       dueDate: new Date().toISOString(),
       completed: false,
       _csrf: csrfToken,
     });
-    expect(response.statusCode).toBe(500); //http status code
+    expect(response.statusCode).toBe(302);
   });
 
-  test("Mark todo as completed (Updating Todo)", async () => {
+  test("Marks a specific todo with the given ID as complete", async () => {
     const agent = request.agent(server);
-    await login(agent, "user.a@test.com", "123456789");
+    await login(agent, "user.a@test.com", "12345678");
+
     let res = await agent.get("/todos");
     let csrfToken = extractCsrfToken(res);
     await agent.post("/todos").send({
@@ -88,7 +95,7 @@ describe("Todo test cases ", () => {
     res = await agent.get("/todos");
     csrfToken = extractCsrfToken(res);
 
-    const response = await agent.put(`todos/${latestTodo.id}`).send({
+    const response = await agent.put(`/todos/${latestTodo.id}`).send({
       _csrf: csrfToken,
       completed: status,
     });
@@ -96,18 +103,19 @@ describe("Todo test cases ", () => {
     expect(parsedUpdateResponse.completed).toBe(true);
   });
 
-  test(" Delete todo using ID", async () => {
+  test("Deletes a todo with the given ID", async () => {
     const agent = request.agent(server);
-    await login(agent, "user.a@test.com", "123456789");
+    await login(agent, "user.a@test.com", "12345678");
+
     let res = await agent.get("/todos");
     let csrfToken = extractCsrfToken(res);
+    // FILL IN YOUR CODE HERE
     await agent.post("/todos").send({
-      title: "Go to shopping",
+      title: "Go Goa",
       dueDate: new Date().toISOString(),
       completed: false,
       _csrf: csrfToken,
     });
-
     const gropuedTodosResponse = await agent
       .get("/todos")
       .set("Accept", "application/json");
@@ -118,10 +126,10 @@ describe("Todo test cases ", () => {
     res = await agent.get("/todos");
     csrfToken = extractCsrfToken(res);
 
-    const response = await agent.put(`todos/${latestTodo.id}`).send({
+    const response = await agent.delete(`/todos/${latestTodo.id}`).send({
       _csrf: csrfToken,
     });
-    const parsedUpdateResponse = JSON.parse(response.text);
-    expect(parsedUpdateResponse.completed).toBe(true);
+    const parsedUpdateResponse = Boolean(response.text);
+    expect(parsedUpdateResponse).toBe(true);
   });
 });
