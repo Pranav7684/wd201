@@ -26,7 +26,7 @@ const { Todo, User } = require("./models");
 
 app.use(
   session({
-    secret: "my-super-secret-key-2355424352345342523",
+    secret: "my-super-secret-key-23487623476321414726",
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
     },
@@ -141,11 +141,6 @@ app.post("/users", async (request, response) => {
     return response.redirect("/signup");
   }
 
-  if (request.body.lastName.length == 0) {
-    request.flash("error", "Last name cannot be empty!");
-    return response.redirect("/signup");
-  }
-
   if (request.body.password.length < 8) {
     request.flash("error", "Password must be at least 8 characters");
     return response.redirect("/signup");
@@ -177,7 +172,12 @@ app.get("/login", (request, reponse) => {
   reponse.render("login", { title: "Login", csrfToken: request.csrfToken() });
 });
 
-app.post("/session", passport.authenticate("local", { failureRedirect: "/login", failureFlash: true, }),
+app.post(
+  "/session",
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureFlash: true,
+  }),
   (request, response) => {
     // Authentication was successful, redirect to /todos
     console.log(request.user);
@@ -196,7 +196,7 @@ app.get("/signout", (request, response, next) => {
 });
 
 app.get("/todos", async (_request, response) => {
-  console.log("Fetching all the todos");
+  console.log("We have to fetch all the todos");
   try {
     const all_todos = await Todo.findAll();
     return response.send(all_todos);
@@ -216,9 +216,12 @@ app.get("/todos/:id", async function (request, response) {
   }
 });
 
-app.post("/todos", connnectEnsureLogin.ensureLoggedIn(), async (request, response) => {
+app.post(
+  "/todos",
+  connnectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
     if (request.body.title.length == 0) {
-      request.flash("error", "Title cannot be empty!");
+      request.flash("error", "Todo Title cannot be empty!");
       return response.redirect("/todos");
     }
 
@@ -227,7 +230,7 @@ app.post("/todos", connnectEnsureLogin.ensureLoggedIn(), async (request, respons
       return response.redirect("/todos");
     }
 
-    console.log("Creating a new todo:", request.body);
+    console.log("Creating new todo:", request.body);
     try {
       await Todo.addTodo({
         title: request.body.title,
@@ -242,7 +245,10 @@ app.post("/todos", connnectEnsureLogin.ensureLoggedIn(), async (request, respons
   },
 );
 
-app.put("/todos/:id", connnectEnsureLogin.ensureLoggedIn(), async (request, response) => {
+app.put(
+  "/todos/:id",
+  connnectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
     console.log("Updating a todo with ID:", request.params.id);
     const todo = await Todo.findByPk(request.params.id);
     try {
@@ -273,7 +279,6 @@ app.delete(
   "/todos/:id",
   connnectEnsureLogin.ensureLoggedIn(),
   async (request, response) => {
-    // console.log("Delete a todo by ID: ", request.params.id)
     const loggedInUser = request.user.id;
     console.log("We have to delete a todo with ID: ", request.params.id);
     try {
