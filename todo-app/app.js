@@ -1,11 +1,9 @@
-// todo-app
-
 const express = require("express");
 const app = express();
-const path = require("path")
 var csrf = require("tiny-csrf");
 const bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
+const path = require("path");
 
 const passport = require("passport");
 const connnectEnsureLogin = require("connect-ensure-login");
@@ -17,7 +15,6 @@ const flash = require("connect-flash");
 const saltRounds = 10;
 
 app.use(express.static(path.join(__dirname, "public")));
-
 app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -29,7 +26,7 @@ const { Todo, User } = require("./models");
 
 app.use(
   session({
-    secret: "my-super-secret-key-454542123584846899760",
+    secret: "my-super-secret-key-2355424352345342523",
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
     },
@@ -86,20 +83,23 @@ passport.deserializeUser((id, done) => {
 app.set("view engine", "ejs");
 
 app.get("/", async (request, response) => {
+  // Check if the user is logged in
   if (request.isAuthenticated()) {
+    // Redirect to "/todos" if the user is logged in
     return response.redirect("/todos");
   }
+  // for non-logged-in users
   response.render("index", {
     title: "Todo Application",
     csrfToken: request.csrfToken(),
   });
 });
 
-app.get("/todos", connnectEnsureLogin.ensureLoggedIn(),
+app.get(
+  "/todos",
+  connnectEnsureLogin.ensureLoggedIn(),
   async (request, response) => {
     const loggedInUser = request.user.id;
-    const loggedInUserfName = request.user.firstName;
-    const loggedInUserlName = request.user.lastName;
 
     const allTodos = await Todo.getTodos(loggedInUser);
     const overdue = await Todo.overdue(loggedInUser);
@@ -116,8 +116,6 @@ app.get("/todos", connnectEnsureLogin.ensureLoggedIn(),
         dueToday,
         completedItems,
         csrfToken: request.csrfToken(),
-        userfName: loggedInUserfName,
-        userlName: loggedInUserlName,
       });
     } else {
       response.json({ overdue, dueLater, dueToday, completedItems });
@@ -148,12 +146,14 @@ app.post("/users", async (request, response) => {
     return response.redirect("/signup");
   }
 
-  if (request.body.password.length < 9) {
+  if (request.body.password.length < 8) {
     request.flash("error", "Password must be at least 8 characters");
     return response.redirect("/signup");
   }
 
+  //hashing the password
   const hashedPwd = await bcrypt.hash(request.body.password, saltRounds);
+  //have to create a user
   console.log(request.user);
   try {
     const user = await User.create({
@@ -177,46 +177,16 @@ app.get("/login", (request, reponse) => {
   reponse.render("login", { title: "Login", csrfToken: request.csrfToken() });
 });
 
-app.get("/resetpassword", (request, reponse) => {
-  reponse.render("resetpassword", {
-    title: "Reset Password",
-    csrfToken: request.csrfToken(),
-  });
-});
-
-app.post("/setpassword", async (request, response) => {
-  const userEmail = request.body.email;
-  const newPassword = request.body.password;
-
-  try {
-    const user = await User.findOne({ where: { email: userEmail } });
-
-    if (!user) {
-      request.flash("error", "User with that email does not exist.");
-      return response.redirect("/resetpassword");
-    }
-    const hashedPwd = await bcrypt.hash(newPassword, saltRounds);
-    await user.update({ password: hashedPwd });
-    return response.redirect("/login");
-  } catch (error) {
-    console.log(error);
-    request.flash("error", "Error updating the password.");
-    return response.redirect("/resetpassword");
-  }
-});
-
-app.post(
-  "/session", passport.authenticate("local", {
-    failureRedirect: "/login",
-    failureFlash: true,
-  }),
+app.post("/session", passport.authenticate("local", { failureRedirect: "/login", failureFlash: true, }),
   (request, response) => {
+    // Authentication was successful, redirect to /todos
     console.log(request.user);
     response.redirect("/todos");
   },
 );
 
 app.get("/signout", (request, response, next) => {
+  //signout
   request.logout((err) => {
     if (err) {
       return next(err);
@@ -226,7 +196,7 @@ app.get("/signout", (request, response, next) => {
 });
 
 app.get("/todos", async (_request, response) => {
-  console.log("We have to fetch all the todos");
+  console.log("Fetching all the todos");
   try {
     const all_todos = await Todo.findAll();
     return response.send(all_todos);
@@ -257,7 +227,7 @@ app.post("/todos", connnectEnsureLogin.ensureLoggedIn(), async (request, respons
       return response.redirect("/todos");
     }
 
-    console.log("Creating new todo:", request.body);
+    console.log("Creating a new todo:", request.body);
     try {
       await Todo.addTodo({
         title: request.body.title,
@@ -273,7 +243,7 @@ app.post("/todos", connnectEnsureLogin.ensureLoggedIn(), async (request, respons
 );
 
 app.put("/todos/:id", connnectEnsureLogin.ensureLoggedIn(), async (request, response) => {
-    console.log("We have to update a todo with ID:", request.params.id);
+    console.log("Updating a todo with ID:", request.params.id);
     const todo = await Todo.findByPk(request.params.id);
     try {
       const updatedtodo = await todo.setCompletionStatus(
@@ -288,7 +258,7 @@ app.put("/todos/:id", connnectEnsureLogin.ensureLoggedIn(), async (request, resp
 );
 
 app.put("/todos/:id/markAsCompleted", async (request, response) => {
-  console.log("We have to update a todo with ID:", request.params.id);
+  console.log("Updating a todo with ID:", request.params.id);
   const todo = await Todo.findByPk(request.params.id);
   try {
     const updatedtodo = await todo.setCompletionStatus(request.body.completed);
@@ -299,8 +269,11 @@ app.put("/todos/:id/markAsCompleted", async (request, response) => {
   }
 });
 
-app.delete("/todos/:id", connnectEnsureLogin.ensureLoggedIn(), async (request, response) => {
-
+app.delete(
+  "/todos/:id",
+  connnectEnsureLogin.ensureLoggedIn(),
+  async (request, response) => {
+    // console.log("Delete a todo by ID: ", request.params.id)
     const loggedInUser = request.user.id;
     console.log("We have to delete a todo with ID: ", request.params.id);
     try {
