@@ -8,21 +8,26 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Todo.belongsTo(models.User, {
-        foreignKey: 'userId'
-      })
       // define association here
+      Todo.belongsTo(models.User, {
+        foreignKey: "userId",
+      });
     }
 
     static addTodo({ title, dueDate, userId }) {
-      return this.create({ title: title, dueDate: dueDate, completed: false, userId });
+      return this.create({
+        title: title,
+        dueDate: dueDate,
+        completed: false,
+        userId,
+      });
     }
 
     markAsCompleted() {
       return this.update({ completed: true });
     }
 
-    deletetodo(id) {
+    deletetodo() {
       return this.removetask(id);
     }
 
@@ -36,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
           dueDate: {
             [Op.lt]: new Date().toLocaleDateString("en-CA"),
           },
-          userId,
+          userId: userId,
           completed: false,
         },
         order: [["id", "ASC"]],
@@ -49,7 +54,7 @@ module.exports = (sequelize, DataTypes) => {
           dueDate: {
             [Op.eq]: new Date().toLocaleDateString("en-CA"),
           },
-          userId,
+          userId: userId,
           completed: false,
         },
         order: [["id", "ASC"]],
@@ -62,7 +67,7 @@ module.exports = (sequelize, DataTypes) => {
           dueDate: {
             [Op.gt]: new Date().toLocaleDateString("en-CA"),
           },
-          userId,
+          userId: userId,
           completed: false,
         },
         order: [["id", "ASC"]],
@@ -73,7 +78,7 @@ module.exports = (sequelize, DataTypes) => {
       return this.findAll({
         where: {
           completed: true,
-          userId
+          userId: userId,
         },
         order: [["id", "ASC"]],
       });
@@ -83,7 +88,7 @@ module.exports = (sequelize, DataTypes) => {
       return this.destroy({
         where: {
           id,
-          userId
+          userId,
         },
       });
     }
